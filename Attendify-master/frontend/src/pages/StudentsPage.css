@@ -1,0 +1,184 @@
+.students-page {
+    /* Full width, integrated into layout */
+    width: 100%;
+    margin-top: 10px;
+}
+
+.sp-header {
+    margin-bottom: 25px;
+}
+
+.sp-header h2 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin: 0 0 5px 0;
+}
+
+.sp-header p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+.sp-table-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    overflow-x: auto;
+}
+
+.sp-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    /* Ensure table scrolls on small screens */
+}
+
+.sp-table th {
+    text-align: left;
+    padding: 18px 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sp-table td {
+    padding: 16px 25px;
+    font-size: 0.95rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sp-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.sp-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Typography Helpers */
+.text-secondary {
+    color: #64748b;
+    font-family: monospace;
+}
+
+.font-medium {
+    font-weight: 500;
+    color: #0f172a;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge.present {
+    background-color: #22c55e;
+    color: #fff;
+}
+
+.status-badge.absent {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+.status-badge.not-marked {
+    background-color: #e2e8f0;
+    color: #64748b;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+    color: #64748b;
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-icon.check:hover {
+    color: #22c55e;
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.btn-icon.x-mark:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.btn-icon.qr:hover {
+    color: #3b82f6;
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .students-page .sp-header h2 {
+    color: var(--text-primary, #f1f5f9);
+}
+
+body.dark-mode .students-page .sp-header p {
+    color: var(--text-secondary, #94a3b8);
+}
+
+body.dark-mode .students-page .sp-table-container {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+body.dark-mode .students-page .sp-table th {
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--border-color, #334155);
+}
+
+body.dark-mode .students-page .sp-table td {
+    color: var(--text-secondary, #cbd5e1);
+    border-color: var(--border-light, #475569);
+}
+
+body.dark-mode .students-page .sp-table tr:hover {
+    background-color: var(--bg-input, #334155);
+}
+
+body.dark-mode .students-page .font-medium {
+    color: var(--text-primary, #f1f5f9);
+}
+
+body.dark-mode .students-page .text-secondary {
+    color: var(--text-muted, #64748b);
+}
+
+body.dark-mode .students-page .status-badge.not-marked {
+    background: var(--bg-input, #334155);
+    color: var(--text-muted, #94a3b8);
+}
+
+body.dark-mode .students-page .btn-icon {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border-color, #334155);
+    color: var(--text-secondary, #94a3b8);
+}

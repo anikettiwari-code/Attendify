@@ -1,0 +1,520 @@
+# Attendify — Software Development Plan
+
+> **Document Type**: Software Requirements & Architecture Specification
+> **Project**: Attendify – AI-Powered Attendance Management System
+> **Version**: 1.2
+> **Date**: 14 February 2026
+> **Platform**: Android / iOS (React Native + Expo)
+> **Stakeholders**: Student · Teacher · System Administrator
+
+---
+
+## 1. Executive Summary
+
+Attendify is a cross-platform mobile application that automates institutional attendance management. The system offers **two distinct attendance mechanisms**:
+
+| Mode | Description |
+|:---|:---|
+| **Manual** | Teacher-initiated roll-call via an in-app checklist |
+| **AI-Automated** | Real-time face recognition from CCTV / classroom cameras that marks attendance without any human intervention |
+
+The AI module operates as a **persistent background service**: when a student's face is detected and matched by the recognition model, the backend automatically inserts an attendance record — the student does not need to open the app or perform any action.
+
+---
+
+## 2. System Architecture
+
+```mermaid
+graph TB
+    subgraph Client Layer
+        SA["Student App<br/>(Expo / React Native)"]
+        TA["Teacher App<br/>(Expo / React Native)"]
+    end
+
+    subgraph Backend Layer
+        API["REST API Server<br/>(Python · FastAPI)"]
+        AI["Face Recognition Engine<br/>(OpenCV · LBPH / dlib)"]
+    end
+
+    subgraph Infrastructure Layer
+        DB["Supabase<br/>PostgreSQL Database"]
+        ST["Supabase Storage<br/>student-faces bucket"]
+        CAM["CCTV / IP Camera<br/>RTSP Stream"]
+    end
+
+    SA -- "HTTPS" --> API
+    TA -- "HTTPS" --> API
+    API -- "SQL" --> DB
+    API -- "Upload / Download" --> ST
+    CAM -- "RTSP / HTTP Stream" --> AI
+    AI -- "Match Result" --> API
+    API -- "INSERT attendance" --> DB
+    AI -- "Fetch enrolled faces" --> ST
+```
+
+### Component Responsibilities
+
+| Component | Role |
+|:---|:---|
+| **Student App** | Dashboard, attendance history, schedule view, face-photo enrollment, notifications |
+| **Teacher App** | Manual attendance marking, AI monitoring dashboard, student management, schedule posting |
+| **REST API (FastAPI)** | Central gateway — authenticates requests, serves data, receives recognition results, writes to DB |
+| **Face Recognition Engine** | Captures frames from CCTV, runs face detection + matching against enrolled photos, sends match results to the API |
+| **Supabase DB** | Persistent storage for profiles, classes, lectures, attendance records |
+| **Supabase Storage** | Object store for student enrollment photos — organized by student ID |
+| **CCTV / IP Camera** | Provides a live video stream (RTSP or HTTP) consumed by the recognition engine |
+
+---
+
+## 3. AI Attendance System — Connectivity & Flow
+
+> [!IMPORTANT]
+> The AI attendance system operates **fully automatically**. Once a student is visible in the classroom camera, the system detects and recognises their face, calls the backend API, and marks attendance — **without any manual action by the student or teacher**.
+
+### 3.1 End-to-End Data Flow
+
+```mermaid
+sequenceDiagram
+    participant CAM as CCTV / IP Camera
+    participant AI as Face Recognition Engine
+    participant API as Backend API (FastAPI)
+    participant DB as Supabase Database
+    participant ST as Supabase Storage
+    participant APP as Teacher App
+
+    rect rgb(240, 248, 255)
+        Note over CAM,ST: ① Continuous Frame Capture
+        CAM->>AI: Stream video frames (RTSP / HTTP)
+        AI->>AI: Detect faces using Haar Cascade / HOG
+    end
+
+    rect rgb(240, 255, 240)
+        Note over AI,ST: ② Face Matching
+        AI->>ST: Fetch enrolled face embeddings for active class
+        ST-->>AI: Return stored embeddings / photos
+        AI->>AI: Compare detected face vs enrolled faces (LBPH / dlib)
+        AI->>AI: Confidence threshold check (≥ 70%)
+    end
+
+    rect rgb(255, 248, 240)
+        Note over AI,DB: ③ Automatic Attendance Logging
+        AI->>API: POST /api/v1/attendance/recognise {student_id, lecture_id, confidence, frame_timestamp}
+        API->>API: Validate request + deduplication check
+        API->>DB: INSERT INTO attendance (student_id, lecture_id, status='Present', method='AI')
+        DB-->>API: 201 Created
+        API-->>AI: {success: true, attendance_id}
+    end
+
+    rect rgb(248, 240, 255)
+        Note over API,APP: ④ Real-Time Notification
+        API-->>APP: Push update to Teacher dashboard (WebSocket / Polling)
+        APP-->>APP: Update live attendance feed
+    end
+```
+
+### 3.2 Key Principles
+
+| Principle | Implementation |
+|:---|:---|
+| **Zero Student Interaction** | Student only uploads photos once during enrollment. All subsequent attendance is marked automatically. |
+| **Deduplication** | Backend rejects duplicate attendance for the same student + lecture. Only the first successful match is recorded. |
+| **Confidence Threshold** | Matches below 70% confidence are logged as `uncertain` and flagged for teacher review — never auto-marked. |
+| **Continuous Monitoring** | The recognition engine processes frames at ~2 FPS throughout the lecture duration. |
+| **Teacher Override** | Teacher can manually correct any AI-marked record (change Present → Absent or vice-versa). |
+| **Audit Trail** | Every AI-marked record stores `confidence_score` and `frame_timestamp` for accountability. |
+
+---
+
+## 4. Backend API Specification
+
+Base URL: `https://api.attendify.app/api/v1`
+
+### 4.1 Authentication
+
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `POST` | `/auth/register` | Register a new user (student/teacher) |
+| `POST` | `/auth/login` | Authenticate and receive JWT token |
+| `GET` | `/auth/me` | Get current user profile |
+
+### 4.2 Attendance
+
+| Method | Endpoint | Description | Called By |
+|:---|:---|:---|:---|
+| `POST` | `/attendance/manual` | Submit manual attendance for a lecture | Teacher App |
+| `POST` | `/attendance/recognise` | **AI endpoint** — log a recognised student | Recognition Engine |
+| `GET` | `/attendance/student/{id}` | Get attendance history for a student | Student App |
+| `GET` | `/attendance/lecture/{id}` | Get attendance list for a lecture | Teacher App |
+| `PATCH` | `/attendance/{id}` | Override/correct an attendance record | Teacher App |
+
+### 4.3 Recognition & Enrollment
+
+| Method | Endpoint | Description | Called By |
+|:---|:---|:---|:---|
+| `POST` | `/enrollment/photos` | Upload 3-5 face photos for a student | Student App |
+| `GET` | `/enrollment/photos/{student_id}` | Retrieve enrolled photo URLs | Recognition Engine |
+| `DELETE` | `/enrollment/photos/{photo_id}` | Remove an enrollment photo | Student App |
+
+### 4.4 Lectures & Schedule
+
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `POST` | `/lectures` | Create a new lecture slot |
+| `GET` | `/lectures?class_id=X&date=Y` | Get lectures for a class on a date |
+| `PUT` | `/lectures/{id}` | Update lecture details |
+
+### 4.5 Notifications
+
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `POST` | `/notifications/broadcast` | Teacher sends notification to a class |
+| `GET` | `/notifications/me` | Get notifications for current user |
+
+### 4.6 AI Recognition Endpoint — Detail
+
+```
+POST /api/v1/attendance/recognise
+```
+
+**Request Body:**
+```json
+{
+  "student_id": "uuid",
+  "lecture_id": "uuid",
+  "confidence_score": 0.87,
+  "frame_timestamp": "2026-02-14T13:05:22Z",
+  "camera_id": "cam-room-301"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "attendance_id": "uuid",
+  "message": "Attendance marked for Rahul Sharma (Roll 42)"
+}
+```
+
+**Response (409 Conflict — Duplicate):**
+```json
+{
+  "success": false,
+  "message": "Attendance already recorded for this student in this lecture"
+}
+```
+
+**Response (422 — Low Confidence):**
+```json
+{
+  "success": false,
+  "message": "Confidence below threshold (0.87 required, got 0.54). Flagged for review."
+}
+```
+
+---
+
+## 5. File Storage Architecture (Supabase Storage)
+
+```
+supabase-storage/
+└── student-faces/                          ← Bucket (Public: No, RLS: Yes)
+    ├── {student_uuid_1}/
+    │   ├── photo_1.jpg                     ← Front-facing, well-lit
+    │   ├── photo_2.jpg                     ← Slight left angle
+    │   ├── photo_3.jpg                     ← Slight right angle
+    │   ├── photo_4.jpg                     ← With glasses (optional)
+    │   └── photo_5.jpg                     ← Different lighting
+    ├── {student_uuid_2}/
+    │   ├── photo_1.jpg
+    │   ├── photo_2.jpg
+    │   └── photo_3.jpg
+    └── ...
+```
+
+### Storage Policies
+
+| Policy | Rule |
+|:---|:---|
+| **Upload** | Only the authenticated student can upload to their own `/{student_id}/` path |
+| **Read** | Backend service role can read any path (for recognition). Students can read only their own. |
+| **Delete** | Students can delete their own photos. Teachers cannot modify student photos. |
+| **File Format** | JPEG only, max 2 MB per image, minimum resolution 480×480 px |
+| **Naming** | `photo_{index}.jpg` where index = 1–5 |
+| **Compression** | Client-side compression to ≤ 500 KB before upload (using `expo-image-manipulator`) |
+
+---
+
+## 6. Database Schema (Supabase / PostgreSQL)
+
+```mermaid
+erDiagram
+    profiles ||--o{ attendance : "has"
+    profiles ||--o{ student_photos : "uploads"
+    profiles ||--o{ lectures : "teaches"
+    classes  ||--o{ lectures : "has"
+    lectures ||--o{ attendance : "records"
+
+    profiles {
+        uuid id PK
+        text full_name
+        text email
+        text roll_no
+        text class
+        text department
+        text role "student | teacher"
+        timestamptz created_at
+    }
+    classes {
+        uuid id PK
+        text name "e.g. CS-A Div 1"
+        text department
+        int student_count
+    }
+    lectures {
+        uuid id PK
+        uuid teacher_id FK
+        uuid class_id FK
+        text subject
+        date lecture_date
+        time start_time
+        time end_time
+        text room_no
+    }
+    attendance {
+        uuid id PK
+        uuid student_id FK
+        uuid lecture_id FK
+        text status "Present | Absent"
+        text method "Manual | AI"
+        float confidence_score "nullable - AI only"
+        text camera_id "nullable - AI only"
+        timestamptz marked_at
+    }
+    student_photos {
+        uuid id PK
+        uuid student_id FK
+        text photo_url
+        int photo_index "1 to 5"
+        timestamptz uploaded_at
+    }
+```
+
+---
+
+## 7. Application File Structure
+
+```
+attendify/
+├── app/                            # Expo Router (file-based routing)
+│   ├── _layout.tsx                 # Root layout — Auth gate
+│   ├── (auth)/
+│   │   ├── login.tsx
+│   │   └── register.tsx
+│   ├── (student)/
+│   │   ├── _layout.tsx             # Student Bottom Tab Navigator
+│   │   ├── dashboard.tsx
+│   │   ├── attendance.tsx
+│   │   ├── schedule.tsx
+│   │   ├── notifications.tsx
+│   │   └── profile.tsx
+│   └── (teacher)/
+│       ├── _layout.tsx             # Teacher Bottom Tab Navigator
+│       ├── dashboard.tsx
+│       ├── mark-attendance.tsx
+│       ├── students.tsx
+│       ├── schedule.tsx
+│       ├── notifications.tsx
+│       └── profile.tsx
+├── components/
+│   ├── ui/                         # Button, Card, Input, Badge, Avatar
+│   ├── charts/                     # AttendanceDonut, BarChart
+│   └── attendance/                 # AttendanceList, RollCallItem, AIStatusFeed
+├── lib/
+│   ├── supabase.ts                 # Supabase client initialisation
+│   ├── api.ts                      # Axios / fetch wrapper for backend API
+│   ├── theme.ts                    # Design tokens (colors, spacing, typography)
+│   └── constants.ts                # App-wide constants
+├── hooks/
+│   ├── useAuth.ts                  # Authentication state & methods
+│   ├── useAttendance.ts            # Attendance CRUD operations
+│   ├── useEnrollment.ts            # Photo upload / management
+│   └── useTheme.ts                 # Dark / Light mode toggle
+├── services/
+│   ├── attendanceService.ts        # Business logic for attendance
+│   ├── enrollmentService.ts        # Photo upload to Supabase Storage
+│   └── notificationService.ts      # Push notification handlers
+├── types/
+│   └── index.ts                    # TypeScript interfaces & enums
+└── assets/
+    ├── fonts/                      # Inter font family
+    └── images/                     # App icons, illustrations
+```
+
+---
+
+## 8. Screen Breakdown
+
+### 8.1 Student Interface (5 Tabs)
+
+| # | Tab | Screen | Key Features |
+|:---|:---|:---|:---|
+| 1 | 🏠 Dashboard | `dashboard.tsx` | Welcome card, today's schedule, attendance donut chart, quick actions |
+| 2 | 📋 Attendance | `attendance.tsx` | Subject-wise %, lecture-by-lecture history, Present/Absent status pills |
+| 3 | 📅 Schedule | `schedule.tsx` | Day-wise lecture timeline (subject, time, room, teacher name) |
+| 4 | 🔔 Notifications | `notifications.tsx` | Schedule changes, announcements, low-attendance alerts |
+| 5 | 👤 Profile | `profile.tsx` | Personal info, **Enroll Face** (upload 3-5 photos), theme toggle, logout |
+
+### 8.2 Teacher Interface (6 Tabs)
+
+| # | Tab | Screen | Key Features |
+|:---|:---|:---|:---|
+| 1 | 🏠 Dashboard | `dashboard.tsx` | Class-wise strength summary, today's lectures, recent activity feed |
+| 2 | ✅ Attendance | `mark-attendance.tsx` | **Manual mode** (roll-call checklist) · **AI Monitor mode** (live recognition feed) |
+| 3 | 👥 Students | `students.tsx` | Search / filter by class, individual attendance history, export data |
+| 4 | 📅 Schedule | `schedule.tsx` | Create / edit / delete lecture slots |
+| 5 | 🔔 Notifications | `notifications.tsx` | Compose & broadcast announcements to selected classes |
+| 6 | 👤 Profile | `profile.tsx` | Personal info, department, theme toggle, logout |
+
+---
+
+## 9. Core Flows
+
+### 9.1 Manual Attendance (Teacher)
+```mermaid
+sequenceDiagram
+    participant T as Teacher
+    participant App as Mobile App
+    participant API as Backend API
+    participant DB as Database
+
+    T->>App: Open "Mark Attendance" → Manual tab
+    App->>API: GET /lectures?teacher_id=X&date=today
+    API-->>App: List of today's lectures
+    T->>App: Select lecture
+    App->>API: GET /attendance/lecture/{id}
+    API-->>App: Student list with current status
+    T->>App: Mark each student Present / Absent
+    T->>App: Tap "Submit"
+    App->>API: POST /attendance/manual {lecture_id, records:[...]}
+    API->>DB: UPSERT attendance rows (method: Manual)
+    DB-->>API: 201 Created
+    API-->>App: Success response
+    App-->>T: "Attendance saved" confirmation
+```
+
+### 9.2 AI Automatic Attendance (No Human Intervention)
+```mermaid
+sequenceDiagram
+    participant CAM as CCTV Camera
+    participant ENG as Recognition Engine
+    participant API as Backend API
+    participant DB as Database
+    participant TAPP as Teacher App
+
+    Note over CAM,ENG: Runs continuously during lecture hours
+    loop Every 500ms
+        CAM->>ENG: Send video frame
+        ENG->>ENG: Detect faces (Haar/HOG)
+    end
+
+    ENG->>ENG: Face detected — extract embedding
+    ENG->>ENG: Match against enrolled class embeddings
+    ENG->>ENG: Match found — confidence 92%
+
+    ENG->>API: POST /attendance/recognise {student_id, lecture_id, confidence: 0.92}
+    API->>API: Deduplication — student not yet marked
+    API->>DB: INSERT attendance (status: Present, method: AI, confidence: 0.92)
+    DB-->>API: 201 Created
+    API-->>ENG: {success: true}
+
+    API-->>TAPP: Real-time update → "Rahul Sharma marked Present (AI)"
+```
+
+### 9.3 Student Photo Enrollment
+```mermaid
+sequenceDiagram
+    participant S as Student
+    participant App as Mobile App
+    participant API as Backend API
+    participant Store as Supabase Storage
+    participant DB as Database
+
+    S->>App: Profile → "Enroll Face"
+    App-->>S: Show photo grid (5 slots)
+    S->>App: Capture / pick photo
+    App->>App: Compress image (≤ 500 KB)
+    App->>API: POST /enrollment/photos (multipart)
+    API->>Store: Upload to student-faces/{student_id}/photo_{n}.jpg
+    Store-->>API: Return signed URL
+    API->>DB: INSERT into student_photos (photo_url, photo_index)
+    DB-->>API: 201 Created
+    API-->>App: {photo_url, photo_index}
+    App-->>S: Show thumbnail with ✓ badge
+```
+
+---
+
+## 10. Design System
+
+| Token | Light Mode | Dark Mode |
+|:---|:---|:---|
+| **Primary** | `#6366f1` Indigo | `#818cf8` |
+| **Success** | `#14b8a6` Teal | `#2dd4bf` |
+| **Danger** | `#f43f5e` Rose | `#fb7185` |
+| **Warning** | `#f59e0b` Amber | `#fbbf24` |
+| **Background** | `#f8fafc` | `#0f172a` |
+| **Card Surface** | `#ffffff` | `#1e293b` |
+| **Text Primary** | `#0f172a` | `#f1f5f9` |
+| **Text Secondary** | `#64748b` | `#94a3b8` |
+| **Border** | `#e2e8f0` | `#334155` |
+
+- **Typography**: Inter (Regular 400, Medium 500, SemiBold 600, Bold 700)
+- **Border Radius**: Cards `16px` · Buttons `12px` · Inputs `10px` · Badges `20px`
+- **Shadows**: `elevation: 2`, `shadowOpacity: 0.06`
+- **Animations**: `react-native-reanimated` + `react-native-gesture-handler`
+
+---
+
+## 11. Development Timeline
+
+| Phase | Duration | Deliverables |
+|:---|:---|:---|
+| **Phase 1 — Foundation** | Week 1 | Expo scaffold, Supabase setup, Auth flow, Design system |
+| **Phase 2 — Student UI** | Week 2 | All 5 student tabs with mock data |
+| **Phase 3 — Teacher UI** | Week 3 | All 6 teacher tabs, manual attendance flow |
+| **Phase 4 — AI Integration** | Week 4 | Recognition engine → API → DB pipeline, AI Monitor UI |
+| **Phase 5 — Polish & Ship** | Week 5 | Theme toggle, push notifications, testing, APK build |
+
+---
+
+## 12. Verification Checklist
+
+| # | Test Case | Expected Outcome |
+|:---|:---|:---|
+| 1 | Student registers | Redirected to Student tab navigator |
+| 2 | Teacher registers | Redirected to Teacher tab navigator |
+| 3 | Student uploads 5 photos | Photos in `student-faces/{id}/`, rows in `student_photos` |
+| 4 | Teacher marks manual attendance | `attendance` rows with `method: Manual` |
+| 5 | Camera detects enrolled student | API receives POST, `attendance` row with `method: AI` |
+| 6 | Duplicate AI recognition | API returns 409, no duplicate row created |
+| 7 | Low-confidence match (< 70%) | API returns 422, record flagged for review |
+| 8 | Teacher overrides AI result | `attendance.status` updated via PATCH |
+| 9 | Student views attendance | Correct percentages, lecture-level history |
+| 10 | Teacher broadcasts notification | All students in class receive push alert |
+| 11 | Dark mode toggle | All screens render correctly |
+| 12 | Network loss → reconnect | Queued operations sync automatically |
+
+---
+
+## 13. Risk Assessment & Mitigation
+
+| # | Risk | Severity | Mitigation Strategy |
+|:---|:---|:---|:---|
+| 1 | Face recognition inaccuracy | High | Confidence threshold + teacher override capability |
+| 2 | Poor quality enrollment photos | Medium | In-app guidelines (lighting, angle checklist) + validation |
+| 3 | CCTV stream latency / dropout | Medium | Buffered frame processing + graceful reconnection |
+| 4 | Supabase free-tier storage limits | Low | Client-side compression (≤ 500 KB) + usage monitoring |
+| 5 | Network outage in classroom | Medium | Local queue on device + automatic sync on reconnect |
+| 6 | Unauthorized API access | High | JWT authentication + RLS policies on all tables |
+| 7 | Student impersonation (photo of a photo) | Medium | Liveness detection in future iteration |

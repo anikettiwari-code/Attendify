@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+Pipfile.lock
+
+# Data & Models
+# We keep _data-face for the dataset as requested, but ignore videos and cache
+backend/models/_videos/
+backend/models/_model_cache/
+backend/attendance.db
+*.db
+*.sqlite3
+*.jpg
+
+# Frontend
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+Thumbs.db

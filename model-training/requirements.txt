@@ -1,0 +1,29 @@
+# Backend Python Dependencies
+
+# Core FastAPI
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+aiofiles
+
+# Face Recognition (Attendance Module)
+numpy<2.0.0
+opencv-python
+opencv-contrib-python
+python-multipart
+sqlalchemy
+geopy
+
+# Timetable Generation (OR-Tools Solver)
+ortools
+pillow
+
+# Liveness Detection
+mediapipe==0.10.14
+
+# Timetable Parsing (OCR + Groq)
+pytesseract
+groq
+python-dotenv
+google-generativeai

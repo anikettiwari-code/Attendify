@@ -1,0 +1,237 @@
+/* Global Theme Variables and Dark Mode */
+:root {
+    /* Primary Colors */
+    --primary-green: #22c55e;
+    --primary-green-dark: #16a34a;
+    --primary-green-light: rgba(34, 197, 94, 0.1);
+
+    /* Accent Colors */
+    --accent-dark: #0f172a;
+    --accent-dark-hover: #1e293b;
+
+    /* Status Colors */
+    --status-success: #22c55e;
+    --status-error: #ef4444;
+    --status-warning: #f59e0b;
+
+    /* Light Theme (Default) */
+    --bg-primary: #f0f5ff;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-input: #f8fafc;
+
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+
+    --border-color: #e2e8f0;
+    --border-light: #f1f5f9;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+body.dark-mode {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --bg-input: #334155;
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    --border-color: #334155;
+    --border-light: #475569;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Global Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme to common elements */
+body.dark-mode .dashboard-layout {
+    background: var(--bg-primary);
+}
+
+body.dark-mode .dashboard-content {
+    background: var(--bg-primary);
+}
+
+body.dark-mode .content-area {
+    background: var(--bg-primary);
+}
+
+/* Cards in dark mode */
+body.dark-mode .stat-card,
+body.dark-mode .chart-section,
+body.dark-mode .rp-card,
+body.dark-mode .notice-card,
+body.dark-mode .form-card,
+body.dark-mode .day-card,
+body.dark-mode .upload-card,
+body.dark-mode .camera-feed-card,
+body.dark-mode .camera-error-card,
+body.dark-mode .manual-card,
+body.dark-mode .students-container,
+body.dark-mode .sp-students-table {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+/* Text colors in dark mode */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode .stat-value,
+body.dark-mode .rp-title h2,
+body.dark-mode .np-title h2,
+body.dark-mode .sp-header h2,
+body.dark-mode .ma-title h2 {
+    color: var(--text-primary);
+}
+
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode .stat-sub,
+body.dark-mode .rp-title p,
+body.dark-mode .np-title p,
+body.dark-mode .chart-header span {
+    color: var(--text-secondary);
+}
+
+/* Inputs in dark mode */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Tables in dark mode */
+body.dark-mode table th {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+body.dark-mode table td {
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+
+body.dark-mode table tr:hover {
+    background: var(--bg-input);
+}
+
+/* Bottom Navigation in dark mode */
+body.dark-mode .bottom-nav {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .nav-item {
+    color: var(--text-primary, #f1f5f9);
+}
+
+body.dark-mode .nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .nav-item.active {
+    background-color: var(--primary-green);
+    color: #fff;
+}
+
+/* Buttons in dark mode */
+body.dark-mode .btn-download,
+body.dark-mode .btn-new-notice,
+body.dark-mode .btn-upload,
+body.dark-mode .btn-post,
+body.dark-mode .btn-submit,
+body.dark-mode .btn-confirm {
+    background: var(--primary-green);
+    color: #fff;
+}
+
+body.dark-mode .btn-cancel {
+    background: var(--bg-input);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Header in dark mode */
+body.dark-mode .td-header {
+    background-color: rgba(34, 197, 94, 0.95);
+}
+
+/* Drop zone in dark mode */
+body.dark-mode .drop-zone {
+    background: var(--bg-input);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .drop-zone:hover,
+body.dark-mode .drop-zone.active {
+    border-color: var(--primary-green);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+body.dark-mode .drop-text {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .drop-hint {
+    color: var(--text-muted);
+}
+
+/* File preview in dark mode */
+body.dark-mode .file-preview {
+    background: var(--bg-input);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .file-name {
+    color: var(--text-primary);
+}
+
+/* Status badges in dark mode */
+body.dark-mode .status-badge.not-marked {
+    background: var(--bg-input);
+    color: var(--text-muted);
+}
+
+/* Mode toggle in dark mode */
+body.dark-mode .mode-toggle button {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+body.dark-mode .mode-toggle button.active {
+    background: var(--primary-green);
+    color: #fff;
+    border-color: var(--primary-green);
+}

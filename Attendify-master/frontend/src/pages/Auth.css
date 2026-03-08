@@ -1,0 +1,372 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Default Light Theme Variables */
+    --bg-color: #f6f5f7;
+    --container-bg: #fff;
+    --text-main: #000;
+    --text-secondary: #333;
+    --input-bg: #eee;
+    --input-border: transparent;
+    /* or #ccc if preferred */
+    --button-bg: #3B753D;
+    /* Green Theme */
+    --button-text: #fff;
+    /* White Text on Green Button */
+    --form-bg: #fff;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+
+    /* Overlay specific (always Gold/Black) */
+    --overlay-bg: #FFD700;
+    --overlay-text: #000;
+}
+
+[data-theme="dark"] {
+    /* Dark Theme Variables */
+    --bg-color: #121212;
+    --container-bg: #1e1e1e;
+    --text-main: #fff;
+    --text-secondary: #ccc;
+    --input-bg: #2d2d2d;
+    --input-border: #444;
+    --button-bg: #3B753D;
+    /* Green accent */
+    --button-text: #fff;
+    --form-bg: #1e1e1e;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 12px;
+}
+
+.container {
+    /* Force Light Theme Colors inside Container regardless of App Theme */
+    --container-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-secondary: #64748b;
+    --input-bg: #f1f5f9;
+    --input-border: transparent;
+    --form-bg: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+
+    background-color: var(--container-bg);
+    border-radius: 30px;
+    box-shadow: 0 14px 28px var(--shadow-color),
+        0 10px 10px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    width: 900px;
+    max-width: 95%;
+    min-height: 600px;
+    margin: auto;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.container p {
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0.3px;
+    margin: 20px 0;
+    color: var(--text-secondary);
+}
+
+.container span {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.container a {
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-decoration: none;
+    margin: 15px 0 10px;
+}
+
+.container button {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    font-size: 12px;
+    padding: 12px 45px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: transform 80ms ease-in;
+}
+
+.container button:active {
+    transform: scale(0.95);
+}
+
+.container button:focus {
+    outline: none;
+}
+
+.container button.ghost {
+    background-color: transparent;
+    border-color: #000;
+    /* Always black on gold overlay */
+    color: #000;
+    /* Always black on gold overlay */
+}
+
+/* Forms */
+.container form {
+    background-color: var(--form-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 50px;
+    height: 100%;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+.container h1 {
+    font-weight: bold;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.container input {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    padding: 12px 15px;
+    margin: 8px 0;
+    width: 100%;
+    border-radius: 4px;
+    /* Slightly softer */
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.container input:focus {
+    border-color: #3B753D;
+}
+
+/* Layout & Animation logic remains same */
+.form-container {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    transition: all 0.6s ease-in-out;
+}
+
+.sign-in-container {
+    left: 0;
+    width: 50%;
+    z-index: 2;
+}
+
+.container.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+}
+
+.sign-up-container {
+    left: 0;
+    width: 50%;
+    opacity: 0;
+    z-index: 1;
+}
+
+.container.right-panel-active .sign-up-container {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 5;
+    animation: show 0.6s;
+}
+
+@keyframes show {
+
+    0%,
+    49.99% {
+        opacity: 0;
+        z-index: 1;
+    }
+
+    50%,
+    100% {
+        opacity: 1;
+        z-index: 5;
+    }
+}
+
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.6s ease-in-out;
+    z-index: 100;
+}
+
+.container.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+}
+
+.overlay {
+    background: rgba(59, 117, 61, 0.9);
+    /* #3B753D Green */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    position: relative;
+    left: -100%;
+    height: 100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+    color: #fff !important;
+    /* White Text */
+}
+
+.overlay h1,
+.overlay p {
+    color: #fff !important;
+}
+
+.overlay-panel button.ghost {
+    border-color: #fff !important;
+    color: #fff !important;
+}
+
+.container.right-panel-active .overlay {
+    transform: translateX(50%);
+}
+
+.overlay-panel {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 40px;
+    text-align: center;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out;
+}
+
+.overlay-right {
+    right: 0;
+    transform: translateX(0);
+}
+
+.overlay-left {
+    transform: translateX(-20%);
+}
+
+.container.right-panel-active .overlay-left {
+    transform: translateX(0);
+}
+
+.container.right-panel-active .overlay-right {
+    transform: translateX(20%);
+}
+
+.social-container {
+    margin: 20px 0;
+}
+
+.social-container a {
+    border: 1px solid #DDDDDD;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    height: 40px;
+    width: 40px;
+    color: #000;
+    /* Icons behave better with specific color */
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.social-container a:hover {
+    border-color: #3B753D;
+    color: #3B753D;
+}
+
+/* Theme Toggle Button */
+/* Theme Toggle Button */
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent !important;
+    /* Override generic button style */
+    border: none;
+    padding: 0;
+    /* Remove padding */
+    cursor: pointer;
+    font-size: 24px;
+    color: #fff;
+    /* White icon usually looks better on colors, or inherit */
+    z-index: 200;
+    width: auto;
+    /* Reset width/height constraints if any */
+    height: auto;
+    box-shadow: none;
+    /* Remove button shadow */
+}
+
+.theme-toggle:hover {
+    background: transparent !important;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .container {
+        min-height: 480px;
+        max-width: 100%;
+    }
+
+    .form-container {
+        padding: 0 20px;
+    }
+}
