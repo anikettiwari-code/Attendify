@@ -22,9 +22,10 @@
       },
       "package": "com.attendify.app",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -54,8 +55,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "attendify-app"
+        "projectId": "966ec557-5aa7-4794-976f-d70e73f14758"
       }
-    }
+    },
+    "owner": "anikettiwari02"
   }
 }
