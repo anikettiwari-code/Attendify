@@ -6,10 +6,8 @@ import { AppState } from 'react-native';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 // Service role key – bypasses RLS for privileged teacher operations
-// Fallback hardcoded so it's always available in Expo bundle (non-EXPO_PUBLIC_ vars are not inlined)
-const supabaseServiceKey =
-  process.env.EXPO_PUBLIC_SUPABASE_SERVICE_KEY ||
-  '***REMOVED_SECRET***';
+// Loaded from environment variable only (never hardcode secrets)
+const supabaseServiceKey = process.env.EXPO_PUBLIC_SUPABASE_SERVICE_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
