@@ -16,6 +16,9 @@ model-training/model-cache/_model_cache/
 model-training/model-cache/folder_hashes.pkl
 model-training/model-cache/labels.pkl
 
+# Training data images (captured locally, not tracked in repo)
+model-training/training-data/*/
+
 # OS files
 .DS_Store
 Thumbs.db
